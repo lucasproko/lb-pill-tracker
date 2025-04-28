@@ -165,7 +165,7 @@ export default function Home() {
 
   return (
     <main className="container mx-auto py-8 px-4">
-      <Card className="w-full max-w-3xl mx-auto">
+      <Card className="w-full max-w-5xl mx-auto min-w-[320px]">
         <CardHeader>
           <div className="flex justify-between items-center">
             <CardTitle className="text-2xl">Supplement Tracker</CardTitle>
@@ -199,6 +199,7 @@ export default function Home() {
               className="rounded-md border calendar-component" 
               modifiers={dayModifiers}
               modifiersClassNames={modifierClassNames}
+              hideNavigation
             />
             <div className="mt-6 flex items-center justify-center space-x-4">
               <div className="flex items-center">

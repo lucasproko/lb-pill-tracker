@@ -1064,6 +1064,9 @@ video {
 .min-w-\[var\(--radix-select-trigger-width\)\] {
   min-width: var(--radix-select-trigger-width);
 }
+.min-w-\[320px\] {
+  min-width: 320px;
+}
 .max-w-3xl {
   max-width: 48rem;
 }
@@ -1075,6 +1078,9 @@ video {
 }
 .max-w-max {
   max-width: max-content;
+}
+.max-w-5xl {
+  max-width: 64rem;
 }
 .flex-1 {
   flex: 1 1 0%;
