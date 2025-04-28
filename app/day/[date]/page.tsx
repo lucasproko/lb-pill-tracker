@@ -115,14 +115,14 @@ export default function DayPage({ params }: { params: { date: string } }) {
   }
 
   return (
-    <main className="container mx-auto py-8 px-4">
-      <Card className="w-full max-w-3xl mx-auto">
+    <main className="container mx-auto py-8 px-2">
+      <Card className="w-full max-w-3xl mx-auto min-w-[320px]">
         <CardHeader>
           <div className="flex items-center mb-2">
             <Button variant="ghost" size="icon" onClick={goBack} className="mr-2">
               <ArrowLeft className="h-4 w-4" />
             </Button>
-            <CardTitle className="text-2xl">{displayDate} – Daily Checklist</CardTitle>
+            <CardTitle className="text-2xl">{displayDate}</CardTitle>
           </div>
           <div className="flex justify-between items-center">
             <div className="w-full">
@@ -136,7 +136,7 @@ export default function DayPage({ params }: { params: { date: string } }) {
             </Button>
           </div>
         </CardHeader>
-        <CardContent className="space-y-6">
+        <CardContent className="space-y-6 px-0">
           <SupplementList
             title="Morning"
             supplements={morningSupplements}

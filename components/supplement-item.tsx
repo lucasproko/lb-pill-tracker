@@ -14,7 +14,7 @@ export default function SupplementItem({ supplementEntry, onToggle, onTimeChange
   const takenAtDate = supplementEntry.taken_at ? new Date(supplementEntry.taken_at) : null;
 
   return (
-    <div className="flex items-center justify-end space-x-2">
+    <div className="flex items-center justify-end space-x-2 px-4">
       <Checkbox 
         id={`supplement-${supplementEntry.id}`} 
         checked={supplementEntry.taken ?? false} 

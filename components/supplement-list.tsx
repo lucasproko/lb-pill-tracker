@@ -19,8 +19,12 @@ export default function SupplementList({ title, supplements, onToggle, onTimeCha
         <TableHeader>
           <TableRow>
             <TableHead className="w-[50%] sm:w-[300px]">Supplement</TableHead>
-            <TableHead className="w-[25%] sm:w-auto">Dosage</TableHead>
-            <TableHead className="text-right w-[25%] sm:w-auto">Status</TableHead>
+            <TableHead className="w-[40%] sm:w-auto">Dosage</TableHead>
+            <TableHead className="w-[10%] sm:w-auto px-4">
+              <div className="flex items-center justify-end">
+                ✅
+              </div>
+            </TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -28,12 +32,12 @@ export default function SupplementList({ title, supplements, onToggle, onTimeCha
             supplements.map((entry) => (
               entry && entry.supplements ? (
                 <TableRow key={entry.id}>
-                  <TableCell className="font-medium">
-                    {entry.supplements.name}
-                    <span className="text-sm text-muted-foreground ml-1">({entry.timing})</span>
+                  <TableCell className="font-medium align-top py-2">
+                    <div>{entry.supplements.name}</div>
+                    <div className="text-xs text-muted-foreground">({entry.timing})</div>
                   </TableCell>
-                  <TableCell>{`${entry.dosage_scheduled} ${entry.unit_scheduled || ''}`.trim()}</TableCell>
-                  <TableCell className="text-right">
+                  <TableCell className="align-middle py-2">{`${entry.dosage_scheduled} ${entry.unit_scheduled || ''}`.trim()}</TableCell>
+                  <TableCell className="text-left align-middle py-2">
                     <SupplementItem
                       supplementEntry={entry}
                       onToggle={() => onToggle(entry.id)}
@@ -45,7 +49,7 @@ export default function SupplementList({ title, supplements, onToggle, onTimeCha
             ))
           ) : (
             <TableRow>
-              <TableCell colSpan={3} className="text-center text-muted-foreground">
+              <TableCell colSpan={3} className="text-center text-muted-foreground py-2">
                 No supplements scheduled for this time.
               </TableCell>
             </TableRow>
