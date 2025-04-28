@@ -15,6 +15,24 @@ import {
   SupplementHistoryEntry
 } from "@/lib/supplement-utils"
 
+// Define the custom sort order for timing
+const timingSortOrder: Record<string, number> = {
+  'anytime': 1,
+  '1 hour before meal': 2,
+  'empty stomach': 3, // Assuming similar priority
+  'at start of meal': 4,
+  'with food': 5, // Assuming similar priority
+  'at end of meal': 6,
+  // Add other timings here if they exist, assigning a higher number
+};
+
+// Helper function to sort supplements
+function sortSupplements(a: SupplementHistoryEntry, b: SupplementHistoryEntry): number {
+  const orderA = timingSortOrder[a.timing] || 99; // Default to end if timing not in map
+  const orderB = timingSortOrder[b.timing] || 99;
+  return orderA - orderB;
+}
+
 export default function DayPage({ params }: { params: { date: string } }) {
   const { date: dateString } = params
   const router = useRouter()
@@ -46,10 +64,18 @@ export default function DayPage({ params }: { params: { date: string } }) {
   const completedSupplements = supplements.filter((s) => s.taken).length
   const progressPercentage = totalSupplements > 0 ? Math.round((completedSupplements / totalSupplements) * 100) : 0
 
-  // Group supplements by time slot
-  const morningSupplements = supplements.filter((s) => s.day_slot === "morning")
-  const middaySupplements = supplements.filter((s) => s.day_slot === "midday")
-  const eveningSupplements = supplements.filter((s) => s.day_slot === "evening")
+  // Group and Sort supplements by time slot
+  const morningSupplements = supplements
+    .filter((s) => s.day_slot === "morning")
+    .sort(sortSupplements); 
+
+  const middaySupplements = supplements
+    .filter((s) => s.day_slot === "midday")
+    .sort(sortSupplements); 
+
+  const eveningSupplements = supplements
+    .filter((s) => s.day_slot === "evening")
+    .sort(sortSupplements); 
 
   // Handle toggling a supplement
   const toggleSupplement = async (entryId: string) => {

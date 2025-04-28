@@ -8,10 +8,28 @@ import { Button } from "@/components/ui/button"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { getCalendarHistoryOverview } from "@/lib/supplement-utils"
+import { supabase } from "@/lib/supabaseClient"
+import type { Json } from "@/lib/database.types"
 import "./calendar-fixes.css" // Import the CSS fixes
 
 // Define type for the overview data state
 type CalendarOverview = Record<string, { completionPercentage: number }>;
+
+// Function to convert VAPID key
+function urlBase64ToUint8Array(base64String: string) {
+  const padding = '='.repeat((4 - base64String.length % 4) % 4);
+  const base64 = (base64String + padding)
+    .replace(/\-/g, '+')
+    .replace(/_/g, '/');
+
+  const rawData = window.atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+
+  for (let i = 0; i < rawData.length; ++i) {
+    outputArray[i] = rawData.charCodeAt(i);
+  }
+  return outputArray;
+}
 
 export default function Home() {
   // State for the UI (client-side only)
@@ -22,6 +40,21 @@ export default function Home() {
   const [calendarOverview, setCalendarOverview] = useState<CalendarOverview>({});
   const [isLoaded, setIsLoaded] = useState(false);
   const router = useRouter();
+  const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>('default');
+
+  // Register Service Worker on mount
+  useEffect(() => {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/service-worker.js')
+        .then((registration) => {
+          console.log('Service Worker registered with scope:', registration.scope);
+        }).catch((error) => {
+          console.error('Service Worker registration failed:', error);
+        });
+    }
+    // Check initial permission status
+    setNotificationPermission(Notification.permission);
+  }, []);
 
   // Initialize client-side state
   useEffect(() => {
@@ -154,6 +187,94 @@ export default function Home() {
     today: "font-bold border-2 border-primary rounded-full"
   };
 
+  // --- Notification Handling --- 
+  const requestNotificationPermission = async () => {
+    if (!('Notification' in window)) {
+      alert("This browser does not support desktop notification");
+      return;
+    }
+
+    const permission = await Notification.requestPermission();
+    setNotificationPermission(permission);
+
+    if (permission === 'granted') {
+      console.log('Notification permission granted.');
+      subscribeUserToPush();
+    } else {
+      console.log('Notification permission denied.');
+    }
+  };
+
+  const subscribeUserToPush = async () => {
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+      console.error('Push Messaging is not supported');
+      return;
+    }
+  
+    try {
+      const registration = await navigator.serviceWorker.ready; 
+      const existingSubscription = await registration.pushManager.getSubscription();
+      
+      if (existingSubscription) {
+        console.log('User IS already subscribed.');
+        // Optional: You might want to ensure this existing subscription is in your DB
+        // await saveSubscriptionToDb(existingSubscription);
+        alert('Already subscribed to notifications!'); 
+        return; 
+      }
+
+      const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+      if (!vapidPublicKey) {
+          console.error("Missing VAPID public key environment variable!");
+          alert("Notification setup error: Missing configuration.");
+          return;
+      }
+      const convertedVapidKey = urlBase64ToUint8Array(vapidPublicKey);
+
+      const subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: convertedVapidKey
+      });
+
+      console.log('User is subscribed:', subscription);
+      
+      // --- Save subscription to Supabase --- 
+      if (subscription) {
+          const { data, error } = await supabase
+              .from('push_subscriptions')
+              // Use upsert with ON CONFLICT on the unique endpoint 
+              // to handle cases where the subscription exists but wasn't retrieved by getSubscription()
+              // or if the RLS insert policy somehow allowed a duplicate before unique constraint
+              .upsert( 
+                  // Cast subscription.toJSON() to satisfy the Json type
+                  { endpoint: subscription.endpoint, subscription: subscription.toJSON() as unknown as Json },
+                  { onConflict: 'endpoint' } // Specify the column(s) for conflict detection
+              )
+              .select() // Select the inserted/updated row
+              .single(); // Expect a single row
+
+          if (error) {
+              console.error('Error saving subscription to DB:', error);
+              alert('Subscribed, but failed to save subscription details.');
+          } else {
+              console.log('Subscription saved to DB:', data);
+              alert('Successfully subscribed and saved subscription!');
+          }
+      }
+      // --- End save subscription --- 
+
+    } catch (error) {
+      console.error('Failed to subscribe the user: ', error);
+      // Handle specific errors like permission denied during subscribe
+      if (error instanceof Error && error.name === 'NotAllowedError') {
+        alert('Subscription failed: Notification permission was denied.');
+        setNotificationPermission('denied'); // Update UI state
+      } else {
+        alert('Failed to subscribe to notifications.');
+      }
+    }
+  };
+
   // Loading or not yet client-side
   if (!currentMonth || !isLoaded) {
     return (
@@ -169,15 +290,23 @@ export default function Home() {
         <CardHeader>
           <div className="flex justify-between items-center">
             <CardTitle className="text-2xl">Supplement Tracker</CardTitle>
-            <div className="flex space-x-2">
+            {/* Notification Button Area */} 
+            <div className="flex items-center space-x-2">
+              {notificationPermission === 'default' && (
+                  <Button onClick={requestNotificationPermission} variant="outline" size="sm">Enable Notifications</Button>
+              )}
+              {notificationPermission === 'denied' && (
+                  <p className="text-xs text-muted-foreground">Notifications Blocked</p>
+              )}
+               {/* Consider adding a button to re-subscribe or manage if already granted */} 
+              {/* Month Navigation */} 
               <Button variant="outline" size="icon" onClick={goToPreviousMonth}>
                 <ChevronLeft className="h-4 w-4" />
               </Button>
               <Button 
                 variant="outline" 
                 onClick={goToToday}
-                // Add explicit type to help debugging
-                type="button" // Keep type="button" to prevent form submission if ever inside a form
+                type="button" 
                 className="px-4"
               >
                 Today
