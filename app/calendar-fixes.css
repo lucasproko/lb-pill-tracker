@@ -1,0 +1,117 @@
+/* Calendar alignment fixes */
+
+/* Fix for the weekday header row */
+.rdp-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  width: 100%;
+}
+
+/* Fix for the weekday header text */
+.rdp-weekday {
+  width: 100% !important;
+  max-width: none !important;
+  text-align: center !important;
+  font-weight: 600 !important;
+  padding: 0 !important;
+  justify-content: center !important;
+  display: flex !important;
+}
+
+/* Fix for calendar weeks */
+.rdp-week {
+  display: grid !important;
+  grid-template-columns: repeat(7, 1fr) !important;
+  width: 100% !important;
+}
+
+/* Fix for cell sizing and alignment */
+.rdp-cell {
+  text-align: center !important;
+  padding: 0 !important;
+  width: auto !important;
+  height: 40px !important;
+  align-items: center !important;
+  justify-content: center !important;
+  display: flex !important;
+}
+
+/* Fix for table layout */
+.rdp-table {
+  width: 100% !important;
+  table-layout: fixed !important;
+  border-collapse: collapse !important;
+  display: table !important;
+}
+
+/* Fix for day button alignment */
+.rdp-button {
+  width: 100% !important;
+  height: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin: 0 auto !important;
+}
+
+/* Ensure all months appear the same width */
+.rdp-month {
+  width: 100% !important;
+}
+
+/* Ensure the month grid fills the container */
+.rdp-months {
+  width: 100% !important;
+}
+
+.rdp-caption {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0.5rem 0 !important;
+  position: relative !important;
+}
+
+/* Additional fixes for head row and cells to ensure they align with the grid */
+.rdp-head_row {
+  display: grid !important;
+  grid-template-columns: repeat(7, 1fr) !important;
+  width: 100% !important;
+}
+
+.rdp-head_cell {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+}
+
+/* Ensure the entire calendar structure uses grid consistently */
+.calendar-component {
+  width: 100% !important;
+}
+
+/* Prevent any default padding that might offset alignments */
+.rdp {
+  padding: 0 !important;
+  margin: 0 !important;
+  width: 100% !important;
+}
+
+/* Additional fullwidth fixes */
+.calendar-container {
+  width: 100% !important;
+  display: block !important;
+}
+
+/* Force DayPicker to take up full width */
+.rdp-day_picker {
+  width: 100% !important;
+  max-width: none !important;
+}
+
+.rdp-nav {
+  width: 100% !important;
+  display: flex !important;
+  justify-content: space-between !important;
+} 
