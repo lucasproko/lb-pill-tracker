@@ -41,19 +41,34 @@ export default function Home() {
   const [isLoaded, setIsLoaded] = useState(false);
   const router = useRouter();
   const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>('default');
+  const [pushManagerSupported, setPushManagerSupported] = useState(false);
 
-  // Register Service Worker on mount
+  // Register Service Worker on mount & check support
   useEffect(() => {
-    if ('serviceWorker' in navigator) {
+    // Check for support first
+    const swSupported = 'serviceWorker' in navigator;
+    const pmSupported = 'PushManager' in window;
+    const notificationSupported = 'Notification' in window;
+    
+    setPushManagerSupported(swSupported && pmSupported && notificationSupported);
+
+    if (swSupported) {
       navigator.serviceWorker.register('/service-worker.js')
         .then((registration) => {
           console.log('Service Worker registered with scope:', registration.scope);
         }).catch((error) => {
           console.error('Service Worker registration failed:', error);
         });
+    } else {
+        console.log('Service Worker not supported by this browser.');
     }
-    // Check initial permission status
-    setNotificationPermission(Notification.permission);
+    
+    if (notificationSupported) {
+        setNotificationPermission(Notification.permission);
+    } else {
+        console.log('Notifications not supported by this browser.');
+        setNotificationPermission('denied'); // Treat as denied if not supported
+    }
   }, []);
 
   // Initialize client-side state
@@ -189,9 +204,16 @@ export default function Home() {
 
   // --- Notification Handling --- 
   const requestNotificationPermission = async () => {
+    // Redundant check, but safe
     if (!('Notification' in window)) {
       alert("This browser does not support desktop notification");
       return;
+    }
+
+    // Check again in case state hasn't updated
+    if (!pushManagerSupported) {
+       alert("Push notifications are not fully supported by this browser.");
+       return;
     }
 
     const permission = await Notification.requestPermission();
@@ -199,14 +221,15 @@ export default function Home() {
 
     if (permission === 'granted') {
       console.log('Notification permission granted.');
-      subscribeUserToPush();
+      subscribeUserToPush(); 
     } else {
       console.log('Notification permission denied.');
     }
   };
 
   const subscribeUserToPush = async () => {
-    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+    // Added check here too for safety
+    if (!pushManagerSupported) {
       console.error('Push Messaging is not supported');
       return;
     }
@@ -292,13 +315,14 @@ export default function Home() {
             <CardTitle className="text-2xl">Supplement Tracker</CardTitle>
             {/* Notification Button Area */} 
             <div className="flex items-center space-x-2">
-              {notificationPermission === 'default' && (
+              {/* Only show button if fully supported and permission is default */} 
+              {pushManagerSupported && notificationPermission === 'default' && (
                   <Button onClick={requestNotificationPermission} variant="outline" size="sm">Enable Notifications</Button>
               )}
+              {/* Show blocked if denied OR if not supported */} 
               {notificationPermission === 'denied' && (
-                  <p className="text-xs text-muted-foreground">Notifications Blocked</p>
+                  <p className="text-xs text-muted-foreground">Notifications Blocked/Unsupported</p>
               )}
-               {/* Consider adding a button to re-subscribe or manage if already granted */} 
               {/* Month Navigation */} 
               <Button variant="outline" size="icon" onClick={goToPreviousMonth}>
                 <ChevronLeft className="h-4 w-4" />
